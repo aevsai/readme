@@ -1,0 +1,45 @@
+---
+import { SOCIAL_LINKS } from '../consts';
+---
+
+<header>
+	<nav class="socials" aria-label="Social links">
+		{SOCIAL_LINKS.map((l, i) => (
+			<>
+				{i > 0 && <span class="sep" aria-hidden="true">·</span>}
+				<a href={l.href} target="_blank" rel="noopener">{l.label}</a>
+			</>
+		))}
+	</nav>
+</header>
+
+<style>
+	header {
+		max-width: var(--measure);
+		margin: 0 auto;
+		padding: 2.25rem 1.5rem 0;
+	}
+	.socials {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: baseline;
+		gap: 0 0.6rem;
+		font-size: 0.9rem;
+		color: var(--ink-soft);
+	}
+	.socials a {
+		text-decoration: none;
+		color: var(--ink-deep);
+	}
+	.socials a:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.sep {
+		color: var(--ink-faint);
+	}
+	@media (max-width: 640px) {
+		header { padding: 1.5rem 1.25rem 0; }
+	}
+</style>

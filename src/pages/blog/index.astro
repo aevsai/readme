@@ -1,0 +1,181 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+
+const sorted = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const [featured, ...rest] = sorted;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Writing — ${SITE_TITLE}`} description="All writing" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<p class="back"><a href="/">← Home</a></p>
+			<h1>Writing</h1>
+
+			{featured && (
+				<section class="featured">
+					<p class="kicker">Latest</p>
+					<a class="card" href={`/blog/${featured.id}/`}>
+						{featured.data.heroImage && (
+							<figure class="card-hero polaroid">
+								<Image width={1400} height={788} quality={88} src={featured.data.heroImage} alt="" />
+							</figure>
+						)}
+						<div class="card-head">
+							<span class="card-date"><FormattedDate date={featured.data.pubDate} /></span>
+							<h2 class="card-title">{featured.data.title}</h2>
+						</div>
+						<p class="card-excerpt">{featured.data.excerpt ?? featured.data.description}</p>
+					</a>
+				</section>
+			)}
+
+			{rest.length > 0 && (
+				<section class="archive">
+					<h2 class="section-title">Archive</h2>
+					<ul class="posts">
+						{rest.map((post) => (
+							<li>
+								<a href={`/blog/${post.id}/`}>
+									<span class="row-top">
+										<span class="row-date"><FormattedDate date={post.data.pubDate} /></span>
+										<span class="row-title">{post.data.title}</span>
+									</span>
+									<span class="row-excerpt">{post.data.excerpt ?? post.data.description}</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main h1 {
+		margin-bottom: 2.5rem;
+	}
+	.back {
+		margin: 0 0 2rem;
+		font-size: 0.9rem;
+		color: var(--ink-soft);
+	}
+	.back a { color: inherit; text-decoration: none; }
+	.back a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+	.kicker, .section-title {
+		font-size: 0.78rem;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		color: var(--ink-soft);
+		font-weight: 500;
+		margin: 0 0 1.25rem;
+	}
+
+	.featured {
+		margin-bottom: 4rem;
+	}
+	.card {
+		display: block;
+		text-decoration: none;
+		color: var(--ink);
+	}
+	.card-hero {
+		margin: 0 0 1.75rem;
+	}
+	.card-hero img {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 16 / 9;
+		object-fit: cover;
+	}
+	.card-head {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.3rem;
+		margin: 0 0 0.6rem;
+	}
+	.card-title {
+		font-size: 1.85rem;
+		line-height: 1.15;
+		margin: 0;
+		color: var(--ink-deep);
+		letter-spacing: -0.01em;
+	}
+	.card:hover .card-title {
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+	.card-date {
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+		white-space: nowrap;
+	}
+	.card-excerpt {
+		margin: 0;
+		color: var(--ink-soft);
+		font-size: 1.02rem;
+	}
+
+	.archive .section-title {
+		margin-bottom: 0.75rem;
+	}
+	.posts {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.posts li {
+		border-bottom: 1px dashed var(--ink-faint);
+	}
+	.posts li:first-child {
+		border-top: 1px dashed var(--ink-faint);
+	}
+	.posts a {
+		display: block;
+		padding: 1rem 0;
+		text-decoration: none;
+		color: var(--ink);
+	}
+	.row-top {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.15rem;
+	}
+	.row-title {
+		color: var(--ink-deep);
+		font-weight: 500;
+	}
+	.posts a:hover .row-title {
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+	.row-date {
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+		white-space: nowrap;
+	}
+	.row-excerpt {
+		display: block;
+		margin-top: 0.3rem;
+		font-size: 0.95rem;
+		color: var(--ink-soft);
+	}
+
+</style>

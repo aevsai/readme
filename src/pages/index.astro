@@ -1,0 +1,424 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import FormattedDate from '../components/FormattedDate.astro';
+import Header from '../components/Header.astro';
+import { CONTACT, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import portrait from '../assets/portrait.jpg';
+import bloodgptIcon from '../assets/bloodgpt.png';
+import lutinIcon from '../assets/lutin.png';
+
+const sorted = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const [featured, ...rest] = sorted;
+const more = rest.slice(0, 4);
+
+const work = [
+	{
+		name: 'bloodgpt.com',
+		role: 'day job',
+		href: 'https://bloodgpt.com',
+		blurb: 'Helping people understand their lab results and be more proactive about their health.',
+		icon: bloodgptIcon,
+	},
+	{
+		name: 'lutinapp.com',
+		role: 'side project',
+		href: 'https://lutinapp.com',
+		blurb: 'A small, always-here assistant that writes docs and notes for you — instead of burning tokens on repeated chat messages.',
+		icon: lutinIcon,
+	},
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section class="hero">
+				<figure class="portrait polaroid">
+					<span class="photo">
+						<Image src={portrait} alt="Artem Evsikov" width={600} height={600} quality={90} loading="eager" />
+					</span>
+				</figure>
+				<div class="hero-text">
+					<h1>Artem Evsikov</h1>
+					<p class="handle">@aevsai</p>
+				</div>
+			</section>
+
+			<section class="work">
+				<h2 class="section-title">Work</h2>
+				<ul class="rows">
+					{work.map((item) => (
+						<li>
+							<a href={item.href} target="_blank" rel="noopener">
+								<span class="sticker" aria-hidden="true">
+									<Image src={item.icon} width={256} height={256} quality={90} alt="" />
+								</span>
+								<span class="row-content">
+									<span class="row-top">
+										<span class="row-title">{item.name}</span>
+										<span class="row-tag">{item.role}</span>
+									</span>
+									<span class="row-excerpt">{item.blurb}</span>
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
+				<div class="stickers-row" aria-hidden="true">
+					{work.map((item) => (
+						<a class="sticker" href={item.href} target="_blank" rel="noopener" tabindex="-1">
+							<Image src={item.icon} width={256} height={256} quality={90} alt="" />
+						</a>
+					))}
+				</div>
+			</section>
+
+			{featured && (
+				<section class="featured">
+					<p class="kicker">Latest</p>
+					<a class="card" href={`/blog/${featured.id}/`}>
+						{featured.data.heroImage && (
+							<figure class="card-hero polaroid">
+								<Image width={1400} height={788} quality={88} src={featured.data.heroImage} alt="" />
+							</figure>
+						)}
+						<div class="card-head">
+							<span class="card-date"><FormattedDate date={featured.data.pubDate} /></span>
+							<h2 class="card-title">{featured.data.title}</h2>
+						</div>
+						<p class="card-excerpt">{featured.data.excerpt ?? featured.data.description}</p>
+					</a>
+				</section>
+			)}
+
+			{more.length > 0 && (
+				<section class="more">
+					<h2 class="section-title">More writing</h2>
+					<ul class="posts">
+						{more.map((post) => (
+							<li>
+								<a href={`/blog/${post.id}/`}>
+									<span class="row-top">
+										<span class="row-date"><FormattedDate date={post.data.pubDate} /></span>
+										<span class="row-title">{post.data.title}</span>
+									</span>
+									<span class="row-excerpt">{post.data.excerpt ?? post.data.description}</span>
+								</a>
+							</li>
+						))}
+					</ul>
+					<p class="all"><a href="/blog">All writing →</a></p>
+				</section>
+			)}
+
+			<section class="contact">
+				<h2 class="section-title">Contact</h2>
+				<ul class="contact-rows">
+					{CONTACT.map((item) => (
+						<li>
+							<span class="contact-label">{item.label}</span>
+							<a class="contact-value" href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel={item.href.startsWith('http') ? 'noopener' : undefined}>{item.value}</a>
+						</li>
+					))}
+				</ul>
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.hero {
+		display: flex;
+		align-items: center;
+		gap: 1.5rem;
+		margin: 1rem 0 4rem;
+	}
+	.portrait {
+		flex: 0 0 auto;
+		width: 9rem;
+		margin: 0;
+		padding: 0.4rem 0.4rem 1.4rem;
+	}
+	.photo {
+		display: block;
+		width: 100%;
+		aspect-ratio: 1 / 1;
+		overflow: hidden;
+	}
+	.photo img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transform: scale(1.5);
+		transform-origin: center 25%;
+		filter: none;
+		mix-blend-mode: normal;
+	}
+	.hero-text {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.hero h1 { margin: 0 0 0.1rem; }
+	@media (max-width: 480px) {
+		.hero { gap: 1.25rem; }
+		.portrait { width: 7rem; padding: 0.3rem 0.3rem 1.1rem; }
+	}
+	.handle {
+		margin: 0;
+		font-size: 1rem;
+		color: var(--ink-soft);
+		letter-spacing: 0.01em;
+	}
+
+	.kicker, .section-title {
+		font-size: 0.78rem;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		color: var(--ink-soft);
+		font-weight: 500;
+		margin: 0 0 1.25rem;
+	}
+
+	.work {
+		margin-bottom: 4rem;
+	}
+	.rows {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.rows li {
+		border-bottom: 1px dashed var(--ink-faint);
+	}
+	.rows li:first-child {
+		border-top: 1px dashed var(--ink-faint);
+	}
+	.rows a {
+		display: block;
+		padding: 1.25rem 0;
+		text-decoration: none;
+		color: var(--ink);
+	}
+	.rows a:hover .row-title {
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+	.row-content {
+		display: block;
+	}
+	.sticker {
+		display: block;
+		position: relative;
+		width: 5rem;
+		height: 5rem;
+		border-radius: 14px;
+		overflow: hidden;
+		background: #fff;
+		box-shadow:
+			0 2px 4px rgba(0, 0, 0, 0.10),
+			0 12px 24px rgba(0, 0, 0, 0.16),
+			inset 0 1px 0 rgba(255, 255, 255, 0.9),
+			inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+		transition: transform 220ms ease;
+	}
+	.sticker img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	/* mobile-first: hide inline row stickers, show stickers-row below */
+	.rows .sticker {
+		display: none;
+	}
+	.stickers-row {
+		display: flex;
+		justify-content: center;
+		gap: 2.5rem;
+		margin-top: 2rem;
+	}
+	.stickers-row .sticker:first-child {
+		transform: rotate(-7deg);
+	}
+	.stickers-row .sticker:last-child {
+		transform: rotate(7deg);
+	}
+	.stickers-row .sticker:hover {
+		transform: rotate(0deg) scale(1.05);
+	}
+
+	@media (min-width: 768px) {
+		.rows li {
+			position: relative;
+		}
+		.rows .sticker {
+			display: block;
+			position: absolute;
+			top: 50%;
+			width: 5.5rem;
+			height: 5.5rem;
+		}
+		.rows li:nth-child(odd) .sticker {
+			left: -7.5rem;
+			transform: translateY(-50%) rotate(-8deg);
+		}
+		.rows li:nth-child(even) .sticker {
+			right: -7.5rem;
+			transform: translateY(-50%) rotate(8deg);
+		}
+		.rows a:hover .sticker {
+			transform: translateY(-50%) rotate(0deg) scale(1.05);
+		}
+		.stickers-row {
+			display: none;
+		}
+	}
+	.row-tag {
+		font-size: 0.8rem;
+		color: var(--ink-soft);
+		font-style: italic;
+		white-space: nowrap;
+	}
+
+	.featured {
+		margin-bottom: 4rem;
+	}
+	.card {
+		display: block;
+		text-decoration: none;
+		color: var(--ink);
+	}
+	.card-hero {
+		margin: 0 0 1.75rem;
+	}
+	.card-hero img {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 16 / 9;
+		object-fit: cover;
+	}
+	.card-head {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.3rem;
+		margin: 0 0 0.6rem;
+	}
+	.card-title {
+		font-size: 1.85rem;
+		line-height: 1.15;
+		margin: 0;
+		color: var(--ink-deep);
+		letter-spacing: -0.01em;
+	}
+	.card:hover .card-title {
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+	.card-date {
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+		white-space: nowrap;
+	}
+	.card-excerpt {
+		margin: 0;
+		color: var(--ink-soft);
+		font-size: 1.02rem;
+	}
+
+	.more .section-title {
+		margin-bottom: 0.75rem;
+	}
+	.posts {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.posts li {
+		border-bottom: 1px dashed var(--ink-faint);
+	}
+	.posts li:first-child {
+		border-top: 1px dashed var(--ink-faint);
+	}
+	.posts a {
+		display: block;
+		padding: 1rem 0;
+		text-decoration: none;
+		color: var(--ink);
+	}
+	.row-top {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.15rem;
+	}
+	.row-title {
+		color: var(--ink-deep);
+		font-weight: 500;
+	}
+	.posts a:hover .row-title {
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+	.row-date {
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+		white-space: nowrap;
+	}
+	.row-excerpt {
+		display: block;
+		margin-top: 0.3rem;
+		font-size: 0.95rem;
+		color: var(--ink-soft);
+	}
+	.all {
+		margin-top: 1.5rem;
+		font-size: 0.95rem;
+	}
+
+	.contact {
+		margin-top: 4rem;
+	}
+	.contact-rows {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.contact-rows li {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1rem;
+		padding: 1rem 0;
+		border-bottom: 1px dashed var(--ink-faint);
+	}
+	.contact-rows li:first-child {
+		border-top: 1px dashed var(--ink-faint);
+	}
+	.contact-label {
+		color: var(--ink-soft);
+		font-size: 0.95rem;
+	}
+	.contact-value {
+		color: var(--ink-deep);
+		font-weight: 500;
+		text-decoration: none;
+	}
+	.contact-value:hover {
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+
+</style>
