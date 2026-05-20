@@ -1,0 +1,130 @@
+---
+const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY;
+const posthogHost = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
+const gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+---
+
+<script
+	is:inline
+	define:vars={{ posthogKey, posthogHost, gaId }}
+>
+	window.__analytics = { posthogKey, posthogHost, gaId };
+</script>
+
+<script>
+	import 'vanilla-cookieconsent/dist/cookieconsent.css';
+	import * as CookieConsent from 'vanilla-cookieconsent';
+
+	declare global {
+		interface Window {
+			__analytics?: { posthogKey?: string; posthogHost?: string; gaId?: string };
+			dataLayer?: unknown[];
+			gtag?: (...args: unknown[]) => void;
+		}
+	}
+
+	const cfg = window.__analytics ?? {};
+	const hasPosthog = Boolean(cfg.posthogKey);
+	const hasGa = Boolean(cfg.gaId);
+
+	const loadPosthog = async () => {
+		if (!hasPosthog) return;
+		const { default: posthog } = await import('posthog-js');
+		if ((window as any).__posthogLoaded) return;
+		(window as any).__posthogLoaded = true;
+		posthog.init(cfg.posthogKey!, {
+			api_host: cfg.posthogHost,
+			capture_pageview: 'history_change',
+			persistence: 'localStorage+cookie',
+		});
+	};
+
+	const unloadPosthog = async () => {
+		if (!hasPosthog || !(window as any).__posthogLoaded) return;
+		const { default: posthog } = await import('posthog-js');
+		posthog.opt_out_capturing();
+	};
+
+	const loadGa = () => {
+		if (!hasGa || (window as any).__gaLoaded) return;
+		(window as any).__gaLoaded = true;
+		const s = document.createElement('script');
+		s.async = true;
+		s.src = `https://www.googletagmanager.com/gtag/js?id=${cfg.gaId}`;
+		document.head.appendChild(s);
+		window.dataLayer = window.dataLayer || [];
+		window.gtag = function () {
+			window.dataLayer!.push(arguments);
+		};
+		window.gtag('js', new Date());
+		window.gtag('config', cfg.gaId, { anonymize_ip: true });
+	};
+
+	const unloadGa = () => {
+		if (!hasGa) return;
+		const id = cfg.gaId!;
+		(window as any)['ga-disable-' + id] = true;
+	};
+
+	CookieConsent.run({
+		guiOptions: {
+			consentModal: { layout: 'box', position: 'bottom right', flipButtons: false },
+			preferencesModal: { layout: 'box' },
+		},
+		categories: {
+			necessary: { enabled: true, readOnly: true },
+			analytics: {
+				services: {
+					...(hasPosthog && {
+						posthog: {
+							label: 'PostHog',
+							onAccept: () => loadPosthog(),
+							onReject: () => unloadPosthog(),
+						},
+					}),
+					...(hasGa && {
+						ga: {
+							label: 'Google Analytics',
+							onAccept: () => loadGa(),
+							onReject: () => unloadGa(),
+						},
+					}),
+				},
+			},
+		},
+		language: {
+			default: 'en',
+			translations: {
+				en: {
+					consentModal: {
+						title: 'Cookies',
+						description:
+							'I use a little analytics to see what people read. No personal data, no ads. You can opt out.',
+						acceptAllBtn: 'Accept',
+						acceptNecessaryBtn: 'Reject',
+						showPreferencesBtn: 'Customize',
+					},
+					preferencesModal: {
+						title: 'Cookie preferences',
+						acceptAllBtn: 'Accept all',
+						acceptNecessaryBtn: 'Reject all',
+						savePreferencesBtn: 'Save',
+						closeIconLabel: 'Close',
+						sections: [
+							{
+								title: 'Strictly necessary',
+								description: 'Required for the site to work.',
+							},
+							{
+								title: 'Analytics',
+								description:
+									'Helps me understand what people read so I can write more of the things that land.',
+								linkedCategory: 'analytics',
+							},
+						],
+					},
+				},
+			},
+		},
+	});
+</script>

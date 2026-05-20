@@ -16,6 +16,8 @@
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.2",
     "astro": "^6.3.5",
-    "sharp": "^0.34.3"
+    "posthog-js": "^1.374.3",
+    "sharp": "^0.34.3",
+    "vanilla-cookieconsent": "^3.1.0"
   }
 }
