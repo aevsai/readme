@@ -5,32 +5,52 @@ excerpt: 'I am no longer excited by AI announcements — I am annoyed. The topic
 pubDate: 'May 20 2026 14:00:00'
 ---
 
-I noticed that I'm no longer excited but annoyed by AI stuff on social media. The topic has become overhyped, the marketing noisy. It's so hard to actually find something that lives up to expectations.
+A couple of weeks ago I noticed that I’m not excited, but rather annoyed by people talking about AI stuff on social media. I, like many other people, felt FOMO and was scanning socials not to miss any of the new products and features. But the topic has become so overhyped and marketing has become so noisy that to find something actually useful and that lives up to expectations has become almost impossible.
 
-And some of you would say this is just how marketing works — how business is done — but I disagree. Markets and smart products existed before AI, and one of the key jobs of any marketing team has always been to showcase a product in a way that makes the user want it *while also aligning expectations*. Maybe in 2026 it's a new norm to overpromise, but 5–10 years ago that was called fraud. The recent case where Apple lost in court because they hadn't delivered Apple Intelligence as they'd presented it is one of the cleanest examples.
+Markets for smart products existed before the AI boom and one of the key tasks for each marketing team would be to showcase the product in a way that makes users want it, but also aligns expectations.
 
-As I see it, there are a couple of reasons why this works the way it works.
+And maybe in 2026 it’s a new norm to overpromise, but 5 to 10 years ago such behavior was called fraud. And a recent case where Apple lost in court because they haven’t delivered Apple Intelligence as they have presented it is one of the greatest examples that it’s not over yet.
 
-Top AI companies want to be the new Apple or the new Google. They've brought a new kind of powerful technology to the market and their goal is for others to adopt it as a daily tool the way we adopted iPhones and Google Search. So their showcases are simple. Their promises are vague. And they can get away with that because no one knows how to catch them lying — performance of AI models for most end users is kind of an abstract thing, mostly based on vibes.
+# Diving deeper
 
-A lot of people have noticed that old iPhones become worse right after you update iOS to the latest version. Camera worse, battery worse, performance worse — go buy a new one. You've probably noticed the same pattern with models: right before a new frontier model drops, the existing model starts to "feel" worse. Everyone goes to Twitter to say that Claude was lobotomized.
+So I tried to understand how we got ourselves in such a position and it turns out the issue I’m talking about is more of a combination of unfair practices and psychological loopholes that existed before, just never were able to work so well.
 
-So our expectations around new models and AI features are totally fucked. The past couple of years we were promised AGI, but no one knows what AGI is. Even the freaking AGI bench had to release a second version, because their tasks ended up getting solved by non-AGI models.
+So what am I talking about? It’s not a secret that most startups are trying to become the new Apple or Google. And current top AI model developers are startups. They have brought a new kind of powerful technology to the market and their main goal is for others to adopt it as a new daily tool. As we have adopted iPhones and Google search. OpenAI’s and Anthropic’s showcases are intentionally simple, to show general direction and then pass the rest to your imagination. That in combination with vague promises leads to the situation where you, the end user, think about dozens of ways to use these tools. And this is the point where each of us creates our own, unique and personal perception of AI products.
 
-Hear me out: this situation more and more looks like some kind of fortune-teller or psychic shit. Like astrology, or tarot cards.
+# Why does it work?
 
-## The Barnum Effect
+But why does it work at all? Why do these vague promises make us believe that their models are the best and that they are capable of changing our daily live so hard that we are afraid of missing even the smallest feature? The answer has two parts to it. 
 
-All of them work because of the Barnum effect.
+## Part I
 
-> **Barnum effect** — the phenomenon where individuals believe generic, vague personality descriptions apply specifically to them, despite the descriptions being applicable to almost everyone.
+The first part is that no one knows what AI and AGI actually is. Even the freaking AGI bench, the test that was specifically designed to mark achievement of AGI, had to release the second version, and then the third one because AGI tasks were solved by non-AGI models. Despite this Sam Altman, the CEO of OpenAI, keeps telling us that AGI will be achieved the next year, this time for sure. And Dario Amodei, the CEO of Anthropic, say that all the code will be written by AI in six month. They sound more and more like some kind of fortune-teller than experts with insider knowledge.
 
-The same thing happens with the promises of AI companies. We got lost in the Barnum effect around the words "AI" and "AGI" because everyone is just filling in their own imagination instead of a strict list of use cases and capabilities.
+All of them abuse the same psychological loophole called Barnum effect, psychological phenomenon where individuals believe generic, vague personality descriptions apply specifically to them, despite the descriptions being applicable to almost everyone.
 
-So in some way, we *did* get the "magic" we were promised. Unfortunately, it turned out to be more the charlatan kind than the Harry Potter kind.
+The same happens with promises from AI companies. We got lost in the Barnum effect for the terms “AI” and “AGI“ because everyone just relies on their imagination instead of a strict list of use cases and capabilities. So in some way we got this “magic“ that we were promised, unfortunately it turned out to be more of a charlatan trick than the magic from Harry Potter.
 
-## What Startups Can't Get Away With
+## Part II
 
-We tolerate this from the AI giants, because despite the overpromises we did get a real boost in productivity. We actually got the new tool we use every day — the one that changed our workflow. What we can't tolerate is the same routine from smaller non-AI products, or from AI startups.
+The second part to the issue is that no one knows how to catch LLM developer’s lying, since performance of AI models for most end users is kind of an abstract thing and mostly based on vibes. And a lot of us already have been tricked the same way by Apple.
 
-At some point, "having smart features" became a mandatory checkpoint on every product roadmap. So they force `somekindofaifeature` into the product. And when it's time to promote it, they do `somekindofmarketing` — they repeat after the giant AI providers, showcase something simple, say something vague about power, performance, and potential. And that's the low-quality, low-value content that now fills social media on a daily basis.
+Most people know that old iPhones become worse right after you update iOS to the latest version. Battery worse, performance worse, go on and buy a new one.
+
+And you’ve probably noticed that the same way, right before the new frontier model comes out, the existing most powerful model starts to work worse. Everyone goes on twitter and shares that Claude was lobotomized. But, again, we can’t prove that, we just have this tickling feeling that something is wrong.
+
+Another frequent technique is cherry-picking. Companies will show you the best result they can achieve over hundreds of attempts instead of showing you the average result. And because of that our expectations regarding new models and AI features are totally messed up.
+
+And we kinda have to tolerate such behavior from these AI Giants, because despite overpromises we still got a big boost in productivity. We actually got that new tool that we use everyday and that changed our workflow.
+
+# It’s contagious
+
+But what we cannot tolerate is the same behavior from smaller non-AI products or from early stage startups. At some point having smart features became a mandatory checkpoint on each product roadmap. They force `somekindofaifeature` into their product. And when it’s time to promote they do `somekindofmarketing`. So what they do is they repeat after these giant AI providers. Again, they showcase something simple, promise something vague about power, performance and potential. And that low quality low value content fills social media on a daily basis.
+
+# Fake user-generated content abuse FOMO
+
+What’s even worse is that they post fake user-generated content and flood Twitter, Linkedin, Threads with it. And that is where we get ourselves in a position when we think that we are losing to AI. That everyone is using some new tool that we are not. We feel left behind and FOMO kicks in. FOMO makes us try new products, pay $20 subs for each new one or spend more tokens because of tokenmaxxxing. FOMO replaced excitement.
+
+# How to resist this manipulations
+
+But at the end of the day when we go to meet our friends and family, we start talking with them about how bad we feel being left behind and it turns out they feel the same. And we think, well, that is weird, everyone on Twitter says that it’s over. Then we decide to go to meetups and conferences and again, the answer is the same. We find a couple of people that tried OpenClaw or Hermes or some other tool, but after a few questions turns out that no, they have not automated their life, they don’t have 50 automated businesses and they still work at their job. They are just fans of trying new things and the process itself brings them joy. 
+
+Next day we stop checking every new tool, skill, or workflow. We start to see these FOMO manipulations made to farm impressions, we start thinking critically. We are finally feel relieved and got space for excitement to get back into our life.
