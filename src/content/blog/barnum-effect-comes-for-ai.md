@@ -5,6 +5,10 @@ excerpt: 'I am no longer excited by AI announcements — I am annoyed. The topic
 pubDate: 'May 20 2026 14:00:00'
 ---
 
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 0 0 2.5rem;">
+  <iframe src="https://www.youtube.com/embed/tXqS0i8uxYk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+</div>
+
 A couple of weeks ago I noticed that I’m not excited, but rather annoyed by people talking about AI stuff on social media. I, like many other people, felt FOMO and was scanning socials so I wouldn’t miss any of the new products and features. But the topic has become so overhyped and marketing has become so noisy that finding something actually useful that lives up to expectations has become almost impossible.
 
 Markets for smart products existed before the AI boom, and one of the key tasks for any marketing team would be to showcase the product in a way that makes users want it while also aligning expectations.
