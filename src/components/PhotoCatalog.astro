@@ -1,0 +1,221 @@
+---
+const catalogUrl = import.meta.env.PUBLIC_R2_CATALOG_URL?.trim();
+---
+
+{catalogUrl && (
+	<section class="photo-catalog" data-photo-catalog data-catalog-url={catalogUrl}>
+		<div class="catalog-heading">
+			<h2 class="section-title">Photos</h2>
+			<span class="catalog-count" data-photo-count aria-live="polite"></span>
+		</div>
+		<p class="catalog-intro">A few things I stopped to look at.</p>
+		<div class="catalog-grid" data-photo-grid aria-busy="true"></div>
+		<p class="catalog-status" data-photo-status role="status">Finding photos…</p>
+		<button class="catalog-more" data-photo-more type="button" hidden>Show more</button>
+	</section>
+)}
+
+<script>
+	type CatalogPhoto = {
+		url: string;
+		previewUrl?: string;
+		key?: string;
+		alt?: string;
+		uploaded?: string;
+	};
+
+	type CatalogResponse = CatalogPhoto[] | { photos?: CatalogPhoto[] };
+
+	const PAGE_SIZE = 12;
+	const imageExtensions = /\.(?:avif|gif|heic|jpe?g|png|webp)$/i;
+
+	function labelFromKey(key = '') {
+		const filename = key.split('/').pop() ?? '';
+		return decodeURIComponent(filename)
+			.replace(imageExtensions, '')
+			.replace(/[-_]+/g, ' ')
+			.trim();
+	}
+
+	function isWebUrl(value: string) {
+		try {
+			const url = new URL(value, window.location.href);
+			return url.protocol === 'https:' || url.protocol === 'http:';
+		} catch {
+			return false;
+		}
+	}
+
+	function makePhoto(photo: CatalogPhoto) {
+		const link = document.createElement('a');
+		link.className = 'catalog-photo polaroid';
+		link.href = photo.url;
+		link.target = '_blank';
+		link.rel = 'noopener';
+
+		const image = document.createElement('img');
+		const label = photo.alt?.trim() || labelFromKey(photo.key);
+		image.src = photo.previewUrl || photo.url;
+		image.alt = label;
+		image.loading = 'lazy';
+		image.decoding = 'async';
+		image.width = 640;
+		image.height = 480;
+		link.append(image);
+
+		if (label) {
+			const caption = document.createElement('span');
+			caption.className = 'catalog-caption';
+			caption.textContent = label;
+			link.append(caption);
+		}
+
+		return link;
+	}
+
+	document.querySelectorAll<HTMLElement>('[data-photo-catalog]').forEach(async (catalog) => {
+		const endpoint = catalog.dataset.catalogUrl;
+		const grid = catalog.querySelector<HTMLElement>('[data-photo-grid]');
+		const status = catalog.querySelector<HTMLElement>('[data-photo-status]');
+		const count = catalog.querySelector<HTMLElement>('[data-photo-count]');
+		const more = catalog.querySelector<HTMLButtonElement>('[data-photo-more]');
+		if (!endpoint || !grid || !status || !count || !more) return;
+
+		try {
+			const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+			if (!response.ok) throw new Error(`Catalog returned ${response.status}`);
+
+			const payload = (await response.json()) as CatalogResponse;
+			const rawPhotos = Array.isArray(payload) ? payload : payload.photos ?? [];
+			const photos = rawPhotos.filter(
+				(photo): photo is CatalogPhoto =>
+					Boolean(photo && typeof photo.url === 'string' && isWebUrl(photo.url)),
+			);
+
+			if (photos.length === 0) {
+				status.textContent = 'No photos here yet.';
+				grid.removeAttribute('aria-busy');
+				return;
+			}
+
+			count.textContent = `${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}`;
+			status.hidden = true;
+			let shown = 0;
+
+			const renderNext = () => {
+				const next = photos.slice(shown, shown + PAGE_SIZE);
+				grid.append(...next.map(makePhoto));
+				shown += next.length;
+				more.hidden = shown >= photos.length;
+			};
+
+			renderNext();
+			grid.removeAttribute('aria-busy');
+			more.addEventListener('click', renderNext);
+		} catch (error) {
+			console.error('Could not load the photo catalog', error);
+			status.textContent = 'The photo shelf is unavailable right now.';
+			grid.removeAttribute('aria-busy');
+		}
+	});
+</script>
+
+<style>
+	.photo-catalog {
+		margin-top: 4rem;
+	}
+	.catalog-heading {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+	.catalog-heading .section-title {
+		margin-bottom: 0.45rem;
+	}
+	.catalog-count {
+		font-size: 0.78rem;
+		color: var(--ink-soft);
+	}
+	.catalog-intro {
+		margin: 0 0 1.5rem;
+		font-size: 0.95rem;
+		color: var(--ink-soft);
+	}
+	.catalog-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.6rem 1.25rem;
+		padding: 0.35rem 0.2rem 0.8rem;
+	}
+	.catalog-grid:empty {
+		display: none;
+	}
+	:global(.catalog-photo) {
+		display: block;
+		padding: 0.55rem 0.55rem 2.15rem;
+		color: #1a1a1a;
+		text-decoration: none;
+		transform: rotate(-1.4deg);
+	}
+	:global(.catalog-photo:nth-child(even)) {
+		transform: rotate(1.2deg);
+	}
+	:global(.catalog-photo:hover),
+	:global(.catalog-photo:nth-child(even):hover) {
+		transform: rotate(0deg) translateY(-2px);
+	}
+	:global(.catalog-photo img) {
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		object-fit: cover;
+		background: #e8e4dc;
+	}
+	:global(.catalog-caption) {
+		position: absolute;
+		left: 0.65rem;
+		right: 0.65rem;
+		bottom: 0.48rem;
+		display: block;
+		overflow: hidden;
+		font-size: 0.76rem;
+		line-height: 1.25;
+		text-align: center;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.catalog-status {
+		margin: 0;
+		padding: 1.2rem 0;
+		border-top: 1px dashed var(--ink-faint);
+		border-bottom: 1px dashed var(--ink-faint);
+		font-size: 0.95rem;
+		color: var(--ink-soft);
+	}
+	.catalog-more {
+		display: block;
+		margin: 1.25rem auto 0;
+		padding: 0;
+		border: 0;
+		border-bottom: 1px solid var(--ink-faint);
+		font: inherit;
+		font-size: 0.95rem;
+		color: var(--ink-deep);
+		background: transparent;
+		cursor: pointer;
+	}
+	.catalog-more:hover {
+		border-color: var(--ink);
+	}
+	.catalog-more[hidden] {
+		display: none;
+	}
+	@media (max-width: 420px) {
+		.catalog-grid {
+			gap: 1.1rem 0.8rem;
+		}
+		:global(.catalog-photo) {
+			padding: 0.4rem 0.4rem 1.85rem;
+		}
+	}
+</style>

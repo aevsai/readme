@@ -1,0 +1,24 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "photo-catalog",
+	"main": "workers/r2-photo-catalog.js",
+	"compatibility_date": "2026-07-19",
+	"account_id": "76637ef3a80fb8c40c7867178b32ff24",
+	"r2_buckets": [
+		{
+			"binding": "PHOTOS",
+			"bucket_name": "photos"
+		}
+	],
+	"images": {
+		"binding": "IMAGES"
+	},
+	"cache": {
+		"enabled": true
+	},
+	"vars": {
+		"PHOTO_PREFIX": "",
+		"PUBLIC_BASE_URL": "https://cdn.lutin.dev",
+		"CORS_ALLOW_ORIGINS": "http://localhost:4321,https://lutin.dev"
+	}
+}
