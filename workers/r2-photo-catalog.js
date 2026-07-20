@@ -1,4 +1,7 @@
-const IMAGE_EXTENSION = /\.(?:avif|gif|heic|jpe?g|png|webp)$/i;
+const IMAGE_EXTENSION = /\.(?:avif|gif|heic|heif|hif|jpe?g|png|webp)$/i;
+const LOCAL_PREVIEW_EXTENSION = /\.(?:heif|hif)$/i;
+const PREVIEW_PREFIX = '_previews/';
+const WORKER_BASE_URL = 'https://photo-catalog.lutin-account.workers.dev';
 
 function encodeKey(key) {
 	return key.split('/').map(encodeURIComponent).join('/');
@@ -54,8 +57,11 @@ async function listPhotos(request, env, ctx) {
 
 	const requestUrl = new URL(request.url);
 	const publicBase = env.PUBLIC_BASE_URL?.replace(/\/$/, '');
+	const workerBase = WORKER_BASE_URL;
 	const photos = objects
-		.filter((object) => IMAGE_EXTENSION.test(object.key))
+		.filter(
+			(object) => !object.key.startsWith(PREVIEW_PREFIX) && IMAGE_EXTENSION.test(object.key),
+		)
 		.sort((a, b) => b.uploaded.getTime() - a.uploaded.getTime())
 		.map((object) => {
 			const relativeKey = object.key.slice(prefix.length);
@@ -65,7 +71,7 @@ async function listPhotos(request, env, ctx) {
 				url: publicBase
 					? `${publicBase}/${encodeKey(object.key)}`
 					: `${requestUrl.origin}/photos/${encodeKey(relativeKey)}`,
-				previewUrl: `${requestUrl.origin}/preview/${encodeKey(relativeKey)}?v=${version}`,
+				previewUrl: `${workerBase}/preview/${encodeKey(relativeKey)}?v=${version}`,
 				uploaded: object.uploaded.toISOString(),
 				size: object.size,
 			};
@@ -120,6 +126,21 @@ async function getPreview(request, pathname, env, ctx) {
 	const key = `${prefix}${relativeKey}`;
 	if (!relativeKey || !IMAGE_EXTENSION.test(key)) {
 		return new Response('Not found', { status: 404 });
+	}
+	if (LOCAL_PREVIEW_EXTENSION.test(key)) {
+		const preview = await env.PHOTOS.get(`${prefix}${PREVIEW_PREFIX}${relativeKey}.jpg`);
+		if (!preview) {
+			return new Response('Preview missing. Run pnpm photos:sync.', { status: 404 });
+		}
+
+		const headers = new Headers(corsHeaders(request, env));
+		preview.writeHttpMetadata(headers);
+		headers.set('Content-Type', 'image/jpeg');
+		headers.set('etag', preview.httpEtag);
+		headers.set('Cache-Control', 'public, max-age=86400, s-maxage=31536000, immutable');
+		const response = new Response(preview.body, { headers });
+		ctx.waitUntil(cache.put(cacheKey, response.clone()));
+		return response;
 	}
 
 	const object = await env.PHOTOS.get(key);

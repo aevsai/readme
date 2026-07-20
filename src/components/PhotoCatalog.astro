@@ -1,5 +1,5 @@
 ---
-const catalogUrl = import.meta.env.PUBLIC_R2_CATALOG_URL?.trim();
+const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json';
 ---
 
 {catalogUrl && (
@@ -27,7 +27,7 @@ const catalogUrl = import.meta.env.PUBLIC_R2_CATALOG_URL?.trim();
 	type CatalogResponse = CatalogPhoto[] | { photos?: CatalogPhoto[] };
 
 	const PAGE_SIZE = 12;
-	const imageExtensions = /\.(?:avif|gif|heic|jpe?g|png|webp)$/i;
+	const imageExtensions = /\.(?:avif|gif|heic|heif|hif|jpe?g|png|webp)$/i;
 
 	function labelFromKey(key = '') {
 		const filename = key.split('/').pop() ?? '';
@@ -55,7 +55,9 @@ const catalogUrl = import.meta.env.PUBLIC_R2_CATALOG_URL?.trim();
 
 		const image = document.createElement('img');
 		const label = photo.alt?.trim() || labelFromKey(photo.key);
-		image.src = photo.previewUrl || photo.url;
+		const previewUrl = new URL(photo.previewUrl || photo.url, window.location.href);
+		if (previewUrl.hostname.endsWith('.workers.dev')) previewUrl.protocol = 'https:';
+		image.src = previewUrl.href;
 		image.alt = label;
 		image.loading = 'lazy';
 		image.decoding = 'async';
