@@ -6,6 +6,7 @@ import { join } from 'node:path';
 const CATALOG_URL = 'https://photo-catalog.lutin-account.workers.dev/catalog.json';
 const BUCKET = 'photos';
 const PREVIEW_PREFIX = '_previews/';
+const DISPLAY_PREFIX = '_display/';
 const HIF_EXTENSION = /\.(?:heif|hif)$/i;
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -62,7 +63,29 @@ function makePreview(source, destination) {
 	);
 }
 
-function uploadPreview(key, file) {
+function makeDisplay(source, destination, directory) {
+	const decoded = join(directory, 'decoded.jpg');
+	execFileSync(
+		'ffmpeg',
+		[
+			'-hide_banner', '-loglevel', 'error', '-y', '-i', source,
+			'-frames:v', '1', '-c:v', 'mjpeg', '-q:v', '2', decoded,
+		],
+		{ stdio: 'inherit' },
+	);
+	execFileSync(
+		'ffmpeg',
+		[
+			'-hide_banner', '-loglevel', 'error', '-y', '-i', decoded,
+			'-frames:v', '1', '-vf',
+			'scale=2400:2400:force_original_aspect_ratio=decrease',
+			'-c:v', 'mjpeg', '-q:v', '3', destination,
+		],
+		{ stdio: 'inherit' },
+	);
+}
+
+function uploadRendition(prefix, key, file) {
 	const result = spawnSync(
 		'npx',
 		[
@@ -71,7 +94,7 @@ function uploadPreview(key, file) {
 			'r2',
 			'object',
 			'put',
-			`${BUCKET}/${PREVIEW_PREFIX}${key}.jpg`,
+			`${BUCKET}/${prefix}${key}.jpg`,
 			'--remote',
 			'--file',
 			file,
@@ -104,22 +127,37 @@ for (const photo of hifPhotos) {
 	const previewUrl = new URL(photo.previewUrl);
 	previewUrl.protocol = 'https:';
 	previewUrl.searchParams.set('syncCheck', Date.now().toString());
-	const existing = await fetch(previewUrl);
-	if (existing.ok) {
-		console.log(`✓ ${photo.key} already has a preview`);
+	const displayUrl = new URL(
+		photo.displayUrl || `https://photo-catalog.lutin-account.workers.dev/display/${encodeURIComponent(photo.key)}`,
+	);
+	displayUrl.protocol = 'https:';
+	displayUrl.searchParams.set('syncCheck', Date.now().toString());
+	const [previewExists, displayExists] = await Promise.all([
+		fetch(previewUrl).then((result) => result.ok),
+		fetch(displayUrl).then((result) => result.ok),
+	]);
+	if (previewExists && displayExists) {
+		console.log(`✓ ${photo.key} already has both renditions`);
 		continue;
 	}
 
 	const directory = mkdtempSync(join(tmpdir(), 'lutin-photo-preview-'));
 	try {
-		console.log(`Creating preview for ${photo.key}…`);
+		console.log(`Creating renditions for ${photo.key}…`);
 		const original = await fetch(photo.url);
 		if (!original.ok) throw new Error(`Could not download ${photo.key}: ${original.status}`);
 		const source = join(directory, 'source.hif');
 		const preview = join(directory, 'preview.jpg');
+		const display = join(directory, 'display.jpg');
 		writeFileSync(source, Buffer.from(await original.arrayBuffer()));
-		makePreview(source, preview);
-		if (!DRY_RUN) uploadPreview(photo.key, preview);
+		if (!previewExists) {
+			makePreview(source, preview);
+			if (!DRY_RUN) uploadRendition(PREVIEW_PREFIX, photo.key, preview);
+		}
+		if (!displayExists) {
+			makeDisplay(source, display, directory);
+			if (!DRY_RUN) uploadRendition(DISPLAY_PREFIX, photo.key, display);
+		}
 		created += 1;
 		console.log(`${DRY_RUN ? '✓ validated' : '✓'} ${photo.key}`);
 	} finally {
@@ -129,6 +167,6 @@ for (const photo of hifPhotos) {
 
 console.log(
 	created > 0
-		? `${DRY_RUN ? 'Validated' : 'Created'} ${created} preview${created === 1 ? '' : 's'}.`
+			? `${DRY_RUN ? 'Validated' : 'Created'} renditions for ${created} photo${created === 1 ? '' : 's'}.`
 		: 'All previews are current.',
 );

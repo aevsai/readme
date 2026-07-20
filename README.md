@@ -80,4 +80,4 @@ Cloudflare Images cannot decode the Sony 10-bit HIF variant. After uploading HIF
 pnpm photos:sync
 ```
 
-This requires `ffmpeg` (`brew install ffmpeg`). It discovers HIF files through the catalog, creates 640×480 JPEG previews locally, and uploads them under `_previews/`. Existing previews are skipped. Redeploy the Worker after changing its code; future photo uploads only require running the sync command.
+This requires `ffmpeg` (`brew install ffmpeg`). It discovers HIF files through the catalog, creates 640×480 catalog previews and 2400px popup renditions locally, then uploads them under `_previews/` and `_display/`. Existing renditions are skipped. The popup includes a separate download link that returns the untouched original. Redeploy the Worker after changing its code; future photo uploads only require running the sync command.

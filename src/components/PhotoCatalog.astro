@@ -12,6 +12,14 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 		<div class="catalog-grid" data-photo-grid aria-busy="true"></div>
 		<p class="catalog-status" data-photo-status role="status">Finding photos…</p>
 		<button class="catalog-more" data-photo-more type="button" hidden>Show more</button>
+		<dialog class="photo-dialog" data-photo-dialog aria-labelledby="photo-dialog-caption">
+			<button class="dialog-close" data-dialog-close type="button" aria-label="Close photo">×</button>
+			<figure class="dialog-figure">
+				<img data-dialog-image alt="" />
+				<figcaption id="photo-dialog-caption" data-dialog-caption></figcaption>
+			</figure>
+			<a class="dialog-download" data-dialog-download href="#">Download original</a>
+		</dialog>
 	</section>
 )}
 
@@ -19,6 +27,8 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 	type CatalogPhoto = {
 		url: string;
 		previewUrl?: string;
+		displayUrl?: string;
+		downloadUrl?: string;
 		key?: string;
 		alt?: string;
 		uploaded?: string;
@@ -46,12 +56,10 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 		}
 	}
 
-	function makePhoto(photo: CatalogPhoto) {
+	function makePhoto(photo: CatalogPhoto, openPhoto: (photo: CatalogPhoto, label: string) => void) {
 		const link = document.createElement('a');
 		link.className = 'catalog-photo polaroid';
-		link.href = photo.url;
-		link.target = '_blank';
-		link.rel = 'noopener';
+		link.href = photo.displayUrl || photo.url;
 
 		const image = document.createElement('img');
 		const label = photo.alt?.trim() || labelFromKey(photo.key);
@@ -64,6 +72,10 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 		image.width = 640;
 		image.height = 480;
 		link.append(image);
+		link.addEventListener('click', (event) => {
+			event.preventDefault();
+			openPhoto(photo, label);
+		});
 
 		if (label) {
 			const caption = document.createElement('span');
@@ -81,7 +93,30 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 		const status = catalog.querySelector<HTMLElement>('[data-photo-status]');
 		const count = catalog.querySelector<HTMLElement>('[data-photo-count]');
 		const more = catalog.querySelector<HTMLButtonElement>('[data-photo-more]');
-		if (!endpoint || !grid || !status || !count || !more) return;
+		const dialog = catalog.querySelector<HTMLDialogElement>('[data-photo-dialog]');
+		const dialogImage = catalog.querySelector<HTMLImageElement>('[data-dialog-image]');
+		const dialogCaption = catalog.querySelector<HTMLElement>('[data-dialog-caption]');
+		const dialogDownload = catalog.querySelector<HTMLAnchorElement>('[data-dialog-download]');
+		const dialogClose = catalog.querySelector<HTMLButtonElement>('[data-dialog-close]');
+		if (!endpoint || !grid || !status || !count || !more || !dialog || !dialogImage || !dialogCaption || !dialogDownload || !dialogClose) return;
+
+		const openPhoto = (photo: CatalogPhoto, label: string) => {
+			const displayUrl = new URL(photo.displayUrl || photo.url, window.location.href);
+			if (displayUrl.hostname.endsWith('.workers.dev')) displayUrl.protocol = 'https:';
+			dialogImage.src = displayUrl.href;
+			dialogImage.alt = label;
+			dialogCaption.textContent = label;
+			dialogCaption.hidden = !label;
+			dialogDownload.href = photo.downloadUrl || photo.url;
+			dialogDownload.setAttribute('download', photo.key?.split('/').pop() || 'photo');
+			dialog.showModal();
+		};
+
+		dialogClose.addEventListener('click', () => dialog.close());
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) dialog.close();
+		});
+		dialog.addEventListener('close', () => dialogImage.removeAttribute('src'));
 
 		try {
 			const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
@@ -106,7 +141,7 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 
 			const renderNext = () => {
 				const next = photos.slice(shown, shown + PAGE_SIZE);
-				grid.append(...next.map(makePhoto));
+				grid.append(...next.map((photo) => makePhoto(photo, openPhoto)));
 				shown += next.length;
 				more.hidden = shown >= photos.length;
 			};
@@ -211,6 +246,56 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 	}
 	.catalog-more[hidden] {
 		display: none;
+	}
+	.photo-dialog {
+		width: min(92vw, 72rem);
+		max-width: none;
+		max-height: 92vh;
+		margin: auto;
+		padding: 2.75rem 1rem 1rem;
+		border: 1px solid var(--ink-faint);
+		background: var(--paper);
+		color: var(--ink);
+		box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+	}
+	.photo-dialog::backdrop {
+		background: rgba(0, 0, 0, 0.78);
+		backdrop-filter: blur(3px);
+	}
+	.dialog-close {
+		position: absolute;
+		top: 0.45rem;
+		right: 0.75rem;
+		padding: 0;
+		border: 0;
+		font: inherit;
+		font-size: 1.8rem;
+		line-height: 1;
+		color: var(--ink-deep);
+		background: transparent;
+		cursor: pointer;
+	}
+	.dialog-figure {
+		margin: 0;
+		text-align: center;
+	}
+	.dialog-figure img {
+		width: auto;
+		max-width: 100%;
+		height: auto;
+		max-height: calc(92vh - 8rem);
+		margin: auto;
+		object-fit: contain;
+	}
+	.dialog-figure figcaption {
+		margin-top: 0.65rem;
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+	}
+	.dialog-download {
+		display: table;
+		margin: 0.75rem auto 0;
+		font-size: 0.9rem;
 	}
 	@media (max-width: 420px) {
 		.catalog-grid {

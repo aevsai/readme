@@ -1,6 +1,7 @@
 const IMAGE_EXTENSION = /\.(?:avif|gif|heic|heif|hif|jpe?g|png|webp)$/i;
 const LOCAL_PREVIEW_EXTENSION = /\.(?:heif|hif)$/i;
 const PREVIEW_PREFIX = '_previews/';
+const DISPLAY_PREFIX = '_display/';
 const WORKER_BASE_URL = 'https://photo-catalog.lutin-account.workers.dev';
 
 function encodeKey(key) {
@@ -60,7 +61,10 @@ async function listPhotos(request, env, ctx) {
 	const workerBase = WORKER_BASE_URL;
 	const photos = objects
 		.filter(
-			(object) => !object.key.startsWith(PREVIEW_PREFIX) && IMAGE_EXTENSION.test(object.key),
+			(object) =>
+				!object.key.startsWith(PREVIEW_PREFIX) &&
+				!object.key.startsWith(DISPLAY_PREFIX) &&
+				IMAGE_EXTENSION.test(object.key),
 		)
 		.sort((a, b) => b.uploaded.getTime() - a.uploaded.getTime())
 		.map((object) => {
@@ -72,6 +76,8 @@ async function listPhotos(request, env, ctx) {
 					? `${publicBase}/${encodeKey(object.key)}`
 					: `${requestUrl.origin}/photos/${encodeKey(relativeKey)}`,
 				previewUrl: `${workerBase}/preview/${encodeKey(relativeKey)}?v=${version}`,
+				displayUrl: `${workerBase}/display/${encodeKey(relativeKey)}?v=${version}`,
+				downloadUrl: `${workerBase}/download/${encodeKey(relativeKey)}?v=${version}`,
 				uploaded: object.uploaded.toISOString(),
 				size: object.size,
 			};
@@ -159,6 +165,78 @@ async function getPreview(request, pathname, env, ctx) {
 	return response;
 }
 
+async function getDisplay(request, pathname, env, ctx) {
+	const cache = caches.default;
+	const cacheKey = cacheKeyFor(request, env);
+	const cached = await cache.match(cacheKey);
+	if (cached) return cached;
+
+	let relativeKey;
+	try {
+		relativeKey = decodeURIComponent(pathname.slice('/display/'.length));
+	} catch {
+		return new Response('Not found', { status: 404 });
+	}
+	const prefix = env.PHOTO_PREFIX ?? 'photos/';
+	const key = `${prefix}${relativeKey}`;
+	if (!relativeKey || !IMAGE_EXTENSION.test(key)) {
+		return new Response('Not found', { status: 404 });
+	}
+
+	if (LOCAL_PREVIEW_EXTENSION.test(key)) {
+		const display = await env.PHOTOS.get(`${prefix}${DISPLAY_PREFIX}${relativeKey}.jpg`);
+		if (!display) {
+			return new Response('Display image missing. Run pnpm photos:sync.', { status: 404 });
+		}
+		const headers = new Headers(corsHeaders(request, env));
+		display.writeHttpMetadata(headers);
+		headers.set('Content-Type', 'image/jpeg');
+		headers.set('etag', display.httpEtag);
+		headers.set('Cache-Control', 'public, max-age=86400, s-maxage=31536000, immutable');
+		const response = new Response(display.body, { headers });
+		ctx.waitUntil(cache.put(cacheKey, response.clone()));
+		return response;
+	}
+
+	const object = await env.PHOTOS.get(key);
+	if (!object) return new Response('Not found', { status: 404 });
+	const transformed = (
+		await env.IMAGES.input(object.body)
+			.transform({ width: 2400, height: 2400, fit: 'scale-down' })
+			.output({ format: 'image/webp', quality: 88, anim: false })
+	).response();
+	const headers = new Headers(transformed.headers);
+	Object.entries(corsHeaders(request, env)).forEach(([name, content]) => headers.set(name, content));
+	headers.set('Cache-Control', 'public, max-age=86400, s-maxage=31536000, immutable');
+	const response = new Response(transformed.body, { status: transformed.status, headers });
+	if (response.ok) ctx.waitUntil(cache.put(cacheKey, response.clone()));
+	return response;
+}
+
+async function downloadPhoto(request, pathname, env) {
+	let relativeKey;
+	try {
+		relativeKey = decodeURIComponent(pathname.slice('/download/'.length));
+	} catch {
+		return new Response('Not found', { status: 404 });
+	}
+	const prefix = env.PHOTO_PREFIX ?? 'photos/';
+	const key = `${prefix}${relativeKey}`;
+	if (!relativeKey || !IMAGE_EXTENSION.test(key)) {
+		return new Response('Not found', { status: 404 });
+	}
+	const object = await env.PHOTOS.get(key);
+	if (!object) return new Response('Not found', { status: 404 });
+
+	const filename = relativeKey.split('/').pop()?.replace(/["\r\n]/g, '_') || 'photo';
+	const headers = new Headers(corsHeaders(request, env));
+	object.writeHttpMetadata(headers);
+	headers.set('Content-Disposition', `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`);
+	headers.set('Content-Length', object.size.toString());
+	headers.set('etag', object.httpEtag);
+	return new Response(object.body, { headers });
+}
+
 export default {
 	async fetch(request, env, ctx) {
 		if (request.method === 'OPTIONS') {
@@ -169,6 +247,8 @@ export default {
 		const { pathname } = new URL(request.url);
 		if (pathname === '/catalog.json') return listPhotos(request, env, ctx);
 		if (pathname.startsWith('/preview/')) return getPreview(request, pathname, env, ctx);
+		if (pathname.startsWith('/display/')) return getDisplay(request, pathname, env, ctx);
+		if (pathname.startsWith('/download/')) return downloadPhoto(request, pathname, env);
 		if (pathname.startsWith('/photos/')) return getPhoto(request, pathname, env);
 		return new Response('Not found', { status: 404 });
 	},
