@@ -144,7 +144,7 @@ for (const photo of hifPhotos) {
 	const directory = mkdtempSync(join(tmpdir(), 'lutin-photo-preview-'));
 	try {
 		console.log(`Creating renditions for ${photo.key}…`);
-		const original = await fetch(photo.url);
+		const original = await fetch(photo.downloadUrl || photo.url);
 		if (!original.ok) throw new Error(`Could not download ${photo.key}: ${original.status}`);
 		const source = join(directory, 'source.hif');
 		const preview = join(directory, 'preview.jpg');

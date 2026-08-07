@@ -18,7 +18,7 @@
 	},
 	"vars": {
 		"PHOTO_PREFIX": "",
-		"PUBLIC_BASE_URL": "https://cdn.lutin.dev",
-		"CORS_ALLOW_ORIGINS": "http://localhost:4321,https://lutin.dev"
+		"PUBLIC_BASE_URL": "https://cdn.aevsai.me",
+		"CORS_ALLOW_ORIGINS": "http://localhost:4321,https://aevsai.me"
 	}
 }

@@ -70,7 +70,7 @@ The home page can discover and render images from a Cloudflare R2 bucket at runt
 2. Deploy the already-configured Worker with `npx wrangler deploy -c wrangler.r2-catalog.jsonc`. The account ID and `photos` bucket from the R2 S3 address are hardcoded in this file; no S3 credentials are needed.
 3. Rebuild the site. The deployed `https://photo-catalog.lutin-account.workers.dev/catalog.json` endpoint is hardcoded in the photo component.
 
-Full-size catalog links point to the bucket's `https://cdn.lutin.dev` custom domain, while previews continue through the resizing Worker. The Images binding accepts originals up to 20 MB. `PHOTO_PREFIX` can be set if the catalog moves into a folder, and `CORS_ALLOW_ORIGINS` is a comma-separated allowlist of site origins.
+Full-size catalog links point to the bucket's `https://cdn.aevsai.me` custom domain, while previews continue through the resizing Worker. The Images binding accepts originals up to 20 MB. `PHOTO_PREFIX` can be set if the catalog moves into a folder, and `CORS_ALLOW_ORIGINS` is a comma-separated allowlist of site origins.
 
 ### Sony HIF previews
 
