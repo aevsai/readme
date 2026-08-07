@@ -55,6 +55,12 @@ const work = [
 					<p class="handle">@aevsai</p>
 				</div>
 			</section>
+			<div class="about">
+				<p>Hi, I'm Artem!</p>
+				<p>I was born in Bryansk, Russia, and studied Information Systems and Computational Technologies at HSE in Moscow. I dropped out in 2021, after my second year, to build an AI startup.</p>
+				<p>After the startup didn't work out, I worked as a software engineer and systems analyst at several tech companies. I also taught students coding, data analysis, and machine learning.</p>
+				<p>In 2024, I joined RealAI as a founding engineer, and in September 2025, I moved to Cyprus.</p>
+			</div>
 
 			<section class="work">
 				<h2 class="section-title">Work</h2>
@@ -146,7 +152,7 @@ const work = [
 		display: flex;
 		align-items: center;
 		gap: 1.5rem;
-		margin: 1rem 0 4rem;
+		margin: 1rem 0 1.5rem;
 	}
 	.portrait {
 		flex: 0 0 auto;
@@ -184,6 +190,13 @@ const work = [
 		color: var(--ink-soft);
 		letter-spacing: 0.01em;
 	}
+	.about {
+		margin: 0 0 4rem;
+		color: var(--ink-soft);
+		font-size: 1.05rem;
+	}
+	.about p { margin: 0 0 0.75rem; }
+	.about p:last-child { margin-bottom: 0; }
 
 	.kicker, .section-title {
 		font-size: 0.78rem;
