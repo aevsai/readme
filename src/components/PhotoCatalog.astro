@@ -297,6 +297,20 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 		margin: 0.75rem auto 0;
 		font-size: 0.9rem;
 	}
+	@media (min-width: 768px) {
+		.catalog-grid {
+			display: flex;
+			flex-wrap: wrap;
+			width: calc(100vw - 3rem);
+			margin-inline: calc(50% - 50vw + 1.5rem);
+		}
+		:global(.catalog-photo) {
+			flex: 0 0 calc(25% - 0.9375rem);
+		}
+		:global(.catalog-photo:nth-child(7n + 5)) {
+			margin-inline-start: calc(12.5% + 0.15625rem);
+		}
+	}
 	@media (max-width: 420px) {
 		.catalog-grid {
 			gap: 1.1rem 0.8rem;

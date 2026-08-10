@@ -9,6 +9,7 @@ const PREVIEW_PREFIX = '_previews/';
 const DISPLAY_PREFIX = '_display/';
 const HIF_EXTENSION = /\.(?:heif|hif)$/i;
 const DRY_RUN = process.argv.includes('--dry-run');
+const REBUILD_PREVIEWS = process.argv.includes('--rebuild-previews');
 
 function requireCommand(command) {
 	try {
@@ -18,65 +19,35 @@ function requireCommand(command) {
 	}
 }
 
-function previewStream(file) {
-	const output = execFileSync(
-		'ffprobe',
-		['-v', 'error', '-show_streams', '-of', 'json', file],
-		{ encoding: 'utf8' },
-	);
-	const streams = JSON.parse(output).streams.filter((stream) => stream.codec_type === 'video');
-	const independent = streams.filter(
-		(stream) => stream.disposition?.dependent !== 1 && stream.codec_name !== 'mjpeg',
-	);
-	const candidates = independent.length > 0 ? independent : streams;
-	const selected = candidates.sort(
-		(a, b) => (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0),
-	)[0];
-	if (!selected) throw new Error('No image stream found');
-	return selected.index;
-}
-
-function makePreview(source, destination) {
-	const stream = previewStream(source);
-	execFileSync(
-		'ffmpeg',
-		[
-			'-hide_banner',
-			'-loglevel',
-			'error',
-			'-y',
-			'-i',
-			source,
-			'-map',
-			`0:${stream}`,
-			'-frames:v',
-			'1',
-			'-vf',
-			'scale=640:480:force_original_aspect_ratio=increase,crop=640:480',
-			'-c:v',
-			'mjpeg',
-			'-q:v',
-			'3',
-			destination,
-		],
-		{ stdio: 'inherit' },
-	);
-}
-
-function makeDisplay(source, destination, directory) {
-	const decoded = join(directory, 'decoded.jpg');
+function decode(source, destination) {
 	execFileSync(
 		'ffmpeg',
 		[
 			'-hide_banner', '-loglevel', 'error', '-y', '-i', source,
-			'-frames:v', '1', '-c:v', 'mjpeg', '-q:v', '2', decoded,
+			'-frames:v', '1', '-c:v', 'mjpeg', '-q:v', '2', destination,
 		],
 		{ stdio: 'inherit' },
 	);
+}
+
+function makePreview(source, destination) {
 	execFileSync(
 		'ffmpeg',
 		[
-			'-hide_banner', '-loglevel', 'error', '-y', '-i', decoded,
+			'-hide_banner', '-loglevel', 'error', '-y', '-i', source,
+			'-frames:v', '1', '-vf',
+			'scale=640:480:force_original_aspect_ratio=increase,crop=640:480',
+			'-c:v', 'mjpeg', '-q:v', '3', destination,
+		],
+		{ stdio: 'inherit' },
+	);
+}
+
+function makeDisplay(source, destination) {
+	execFileSync(
+		'ffmpeg',
+		[
+			'-hide_banner', '-loglevel', 'error', '-y', '-i', source,
 			'-frames:v', '1', '-vf',
 			'scale=2400:2400:force_original_aspect_ratio=decrease',
 			'-c:v', 'mjpeg', '-q:v', '3', destination,
@@ -110,7 +81,6 @@ function uploadRendition(prefix, key, file) {
 }
 
 requireCommand('ffmpeg');
-requireCommand('ffprobe');
 
 const response = await fetch(`${CATALOG_URL}?sync=${Date.now()}`);
 if (!response.ok) throw new Error(`Catalog returned ${response.status}`);
@@ -132,10 +102,11 @@ for (const photo of hifPhotos) {
 	);
 	displayUrl.protocol = 'https:';
 	displayUrl.searchParams.set('syncCheck', Date.now().toString());
-	const [previewExists, displayExists] = await Promise.all([
+	const [hasPreview, displayExists] = await Promise.all([
 		fetch(previewUrl).then((result) => result.ok),
 		fetch(displayUrl).then((result) => result.ok),
 	]);
+	const previewExists = hasPreview && !REBUILD_PREVIEWS;
 	if (previewExists && displayExists) {
 		console.log(`✓ ${photo.key} already has both renditions`);
 		continue;
@@ -147,15 +118,17 @@ for (const photo of hifPhotos) {
 		const original = await fetch(photo.downloadUrl || photo.url);
 		if (!original.ok) throw new Error(`Could not download ${photo.key}: ${original.status}`);
 		const source = join(directory, 'source.hif');
+		const decoded = join(directory, 'decoded.jpg');
 		const preview = join(directory, 'preview.jpg');
 		const display = join(directory, 'display.jpg');
 		writeFileSync(source, Buffer.from(await original.arrayBuffer()));
+		decode(source, decoded);
 		if (!previewExists) {
-			makePreview(source, preview);
+			makePreview(decoded, preview);
 			if (!DRY_RUN) uploadRendition(PREVIEW_PREFIX, photo.key, preview);
 		}
 		if (!displayExists) {
-			makeDisplay(source, display, directory);
+			makeDisplay(decoded, display);
 			if (!DRY_RUN) uploadRendition(DISPLAY_PREFIX, photo.key, display);
 		}
 		created += 1;

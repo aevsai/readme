@@ -59,6 +59,7 @@ async function listPhotos(request, env, ctx) {
 	const requestUrl = new URL(request.url);
 	const publicBase = env.PUBLIC_BASE_URL?.replace(/\/$/, '');
 	const workerBase = WORKER_BASE_URL;
+	const objectByKey = new Map(objects.map((object) => [object.key, object]));
 	const photos = objects
 		.filter(
 			(object) =>
@@ -70,13 +71,19 @@ async function listPhotos(request, env, ctx) {
 		.map((object) => {
 			const relativeKey = object.key.slice(prefix.length);
 			const version = encodeURIComponent(object.etag);
+			const previewVersion = encodeURIComponent(
+				objectByKey.get(`${prefix}${PREVIEW_PREFIX}${relativeKey}.jpg`)?.etag || object.etag,
+			);
+			const displayVersion = encodeURIComponent(
+				objectByKey.get(`${prefix}${DISPLAY_PREFIX}${relativeKey}.jpg`)?.etag || object.etag,
+			);
 			return {
 				key: object.key,
 				url: publicBase
 					? `${publicBase}/${encodeKey(object.key)}`
 					: `${requestUrl.origin}/photos/${encodeKey(relativeKey)}`,
-				previewUrl: `${workerBase}/preview/${encodeKey(relativeKey)}?v=${version}`,
-				displayUrl: `${workerBase}/display/${encodeKey(relativeKey)}?v=${version}`,
+				previewUrl: `${workerBase}/preview/${encodeKey(relativeKey)}?v=${previewVersion}`,
+				displayUrl: `${workerBase}/display/${encodeKey(relativeKey)}?v=${displayVersion}`,
 				downloadUrl: `${workerBase}/download/${encodeKey(relativeKey)}?v=${version}`,
 				uploaded: object.uploaded.toISOString(),
 				size: object.size,
