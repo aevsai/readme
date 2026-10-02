@@ -112,6 +112,13 @@ const catalogUrl = 'https://photo-catalog.lutin-account.workers.dev/catalog.json
 			dialog.showModal();
 		};
 
+		document.querySelectorAll<HTMLAnchorElement>('[data-photo-trigger]').forEach((link) => {
+			link.addEventListener('click', (event) => {
+				event.preventDefault();
+				openPhoto({ url: link.href, displayUrl: link.href, downloadUrl: link.href }, link.dataset.photoLabel?.trim() ?? '');
+			});
+		});
+
 		dialogClose.addEventListener('click', () => dialog.close());
 		dialog.addEventListener('click', (event) => {
 			if (event.target === dialog) dialog.close();
