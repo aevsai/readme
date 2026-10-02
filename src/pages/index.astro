@@ -9,6 +9,7 @@ import PhotoCatalog from '../components/PhotoCatalog.astro';
 import { CONTACT, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import portrait from '../assets/portrait.jpg';
 import bloodgptIcon from '../assets/bloodgpt.png';
+import codefactsIcon from '../assets/codefacts.png';
 import lutinIcon from '../assets/lutin.png';
 
 const sorted = (await getCollection('blog')).sort(
@@ -17,21 +18,38 @@ const sorted = (await getCollection('blog')).sort(
 const [featured, ...rest] = sorted;
 const more = rest.slice(0, 4);
 
-const work = [
+const sections = [
 	{
-		name: 'bloodgpt.com',
-		role: 'day job',
-		href: 'https://bloodgpt.com',
-		blurb: 'Helping people understand their lab results and be more proactive about their health.',
-		icon: bloodgptIcon,
+		title: 'Work',
+		items: [
+			{
+				name: 'bloodgpt.com',
+				role: 'day job',
+				href: 'https://bloodgpt.com',
+				blurb: 'Helping people understand their lab results and be more proactive about their health.',
+				icon: bloodgptIcon,
+			},
+			{
+				name: 'lutin.app',
+				role: 'side project',
+				href: 'https://lutin.app',
+				blurb: 'A small, always-here assistant that writes docs and notes for you — instead of burning tokens on repeated chat messages.',
+				icon: lutinIcon,
+				bareIcon: true,
+			},
+		],
 	},
 	{
-		name: 'lutinapp.com',
-		role: 'side project',
-		href: 'https://lutinapp.com',
-		blurb: 'A small, always-here assistant that writes docs and notes for you — instead of burning tokens on repeated chat messages.',
-		icon: lutinIcon,
-		bareIcon: true,
+		title: 'Fun stuff',
+		items: [
+			{
+				name: 'CodeFacts',
+				role: 'experiment',
+				href: 'https://codefacts.aevsai.me/',
+				blurb: 'Explore what your code knows by turning repository context into a focused stack of cards.',
+				icon: codefactsIcon,
+			},
+		],
 	},
 ];
 ---
@@ -64,34 +82,36 @@ const work = [
 				<p>In 2024, I joined RealAI as a founding engineer, and in September 2025, I moved to Cyprus.</p>
 			</div>
 
-			<section class="work">
-				<h2 class="section-title">Work</h2>
-				<ul class="rows">
-					{work.map((item) => (
-						<li>
-							<a href={item.href} target="_blank" rel="noopener">
-								<span class:list={["sticker", { bare: item.bareIcon }]} aria-hidden="true">
-									<Image src={item.icon} width={256} height={256} quality={90} alt="" />
-								</span>
-								<span class="row-content">
-									<span class="row-top">
-										<span class="row-title">{item.name}</span>
-										<span class="row-tag">{item.role}</span>
+			{sections.map((section) => (
+				<section class="work">
+					<h2 class="section-title">{section.title}</h2>
+					<ul class="rows">
+						{section.items.map((item) => (
+							<li>
+								<a href={item.href} target="_blank" rel="noopener">
+									<span class:list={["sticker", { bare: item.bareIcon }]} aria-hidden="true">
+										<Image src={item.icon} width={256} height={256} quality={90} alt="" />
 									</span>
-									<span class="row-excerpt">{item.blurb}</span>
-								</span>
+									<span class="row-content">
+										<span class="row-top">
+											<span class="row-title">{item.name}</span>
+											<span class="row-tag">{item.role}</span>
+										</span>
+										<span class="row-excerpt">{item.blurb}</span>
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+					<div class="stickers-row" aria-hidden="true">
+						{section.items.map((item) => (
+							<a class:list={["sticker", { bare: item.bareIcon }]} href={item.href} target="_blank" rel="noopener" tabindex="-1">
+								<Image src={item.icon} width={256} height={256} quality={90} alt="" />
 							</a>
-						</li>
-					))}
-				</ul>
-				<div class="stickers-row" aria-hidden="true">
-					{work.map((item) => (
-						<a class:list={["sticker", { bare: item.bareIcon }]} href={item.href} target="_blank" rel="noopener" tabindex="-1">
-							<Image src={item.icon} width={256} height={256} quality={90} alt="" />
-						</a>
-					))}
-				</div>
-			</section>
+						))}
+					</div>
+				</section>
+			))}
 
 			{featured && (
 				<section class="featured">
