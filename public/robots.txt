@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://aevsai.me/sitemap-index.xml
